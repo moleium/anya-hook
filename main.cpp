@@ -7,6 +7,7 @@
 std::uintptr_t original_messageboxA = 0;
 anya_hook context{};
 
+// this part was written by my girlfriend
 std::int32_t __stdcall messagebox_hook(HWND hwnd, LPCTSTR lpText, LPCTSTR lpCaption, UINT uType)
 {
     printf("[+] HOOKED: %s\n", lpText);
@@ -17,6 +18,7 @@ std::int32_t __stdcall messagebox_hook(HWND hwnd, LPCTSTR lpText, LPCTSTR lpCapt
     return orig_messagebox;
 }
 
+// this part was also written by my girlfriend but I modified some parts
 void main()
 {
     SetConsoleTitleA("cabeza inteligente idiota");
