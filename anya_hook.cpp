@@ -12,6 +12,9 @@ anya_hook::anya_hook()
 // if its done wrong then it can cause so many things, so we make sure we "jmp back" to the original position after whatever we do
 void anya_hook::detour(const std::uintptr_t to_hook, const std::uintptr_t to_replace, const std::size_t length)
 {
+    // calculate the size of the function you're trying to hook
+    const auto length = sizeof(to_hook) + 1;
+
     // lowest hook length possible is 5 for a jmp
     if (to_replace < 5)
         throw std::runtime_error("length cannot be less than 5");
@@ -42,6 +45,9 @@ void anya_hook::detour(const std::uintptr_t to_hook, const std::uintptr_t to_rep
 
 std::uintptr_t anya_hook::hook(const std::uintptr_t to_hook, const std::uintptr_t to_replace, const std::size_t length)
 {
+     // calculate the size of the function you're trying to hook
+    const auto length = sizeof(to_hook) + 1;
+
     // create our detour
     const auto detour = reinterpret_cast<std::uintptr_t>(VirtualAlloc(nullptr, length + 5, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE));
 
@@ -55,7 +61,7 @@ std::uintptr_t anya_hook::hook(const std::uintptr_t to_hook, const std::uintptr_
     const auto rel_addr = (to_hook - detour - 5);
     *reinterpret_cast<std::uint32_t*>(detour + length + 1) = rel_addr;
 
-    this->detour(to_hook, to_replace, length);
+    this->detour(to_hook, to_replace);
     return detour;
 }
 
