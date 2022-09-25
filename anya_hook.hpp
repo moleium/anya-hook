@@ -16,8 +16,8 @@ public:
 public:
 	explicit anya_hook();
 
-	void detour(const std::uintptr_t to_hook, const std::uintptr_t to_replace, const std::size_t length);
-	std::uintptr_t hook(const std::uintptr_t to_hook, const std::uintptr_t to_replace, const std::size_t length);
+	void detour(const std::uintptr_t to_hook, const std::uintptr_t to_replace);
+	std::uintptr_t hook(const std::uintptr_t to_hook, const std::uintptr_t to_replace);
 
 	void unhook(std::uintptr_t to_unhook);
 	void yield(const std::uintptr_t to_yield);
