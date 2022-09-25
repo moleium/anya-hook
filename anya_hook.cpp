@@ -1,4 +1,5 @@
 #include "anya_hook.hpp"
+#include "hde32_disasm.hpp"
 
 anya_hook::anya_hook()
 {
@@ -12,24 +13,12 @@ anya_hook::anya_hook()
 // if its done wrong then it can cause so many things, so we make sure we "jmp back" to the original position after whatever we do
 void anya_hook::detour(const std::uintptr_t to_hook, const std::uintptr_t to_replace, const std::size_t length)
 {
-    // calculate the size of the function you're trying to hook
-    const auto length = sizeof(to_hook) + 1;
-
-    // lowest hook length possible is 5 for a jmp
-    if (to_replace < 5)
-        throw std::runtime_error("length cannot be less than 5");
-
-    // i dont know who the fuck would decide to do anya_hook::hook_function(0, ...) but yeah just incase
-    if (!to_hook)
-        throw std::runtime_error("there was no function entered");
-
     // let us read/write to memory as much as we want
     DWORD old_protect{0};
 
     VirtualProtect(reinterpret_cast<void*>(to_hook), length, PAGE_EXECUTE_READWRITE, &old_protect);
 
     // clone the original memory's contents, we will be using them for other functions (e.g yield)
-    this->function_size = length;
     this->function_o = reinterpret_cast<std::uint8_t*>(std::malloc(length));
 
     for (auto i = 0u; i < length; i++)
@@ -43,25 +32,49 @@ void anya_hook::detour(const std::uintptr_t to_hook, const std::uintptr_t to_rep
     VirtualProtect(reinterpret_cast<void*>(to_hook), length, old_protect, &old_protect);
 }
 
-std::uintptr_t anya_hook::hook(const std::uintptr_t to_hook, const std::uintptr_t to_replace, const std::size_t length)
+std::uintptr_t anya_hook::hook(const std::uintptr_t to_hook, const std::uintptr_t to_replace, std::int32_t instr_nops)
 {
-     // calculate the size of the function you're trying to hook
-    const auto length = sizeof(to_hook) + 1;
+    // calculate the size of the function you're trying to hook
+    auto at = to_hook; // we have to do it like this, otherwise HDE32 Disassembler fucks up
+    auto nops = 0u;
 
+    while (true)
+    {
+        hde32s disasm{0};
+        hde32_disasm(reinterpret_cast<void*>(at), &disasm);
+
+        at += disasm.len;
+        nops += disasm.len;
+
+        if (nops > 5)
+        {
+            if (instr_nops)
+            {
+                instr_nops--;
+                continue;
+            }
+
+            break;
+        }
+    }
+
+    nops -= 5;
+    this->function_size = (nops + 5);
+    
     // create our detour
-    const auto detour = reinterpret_cast<std::uintptr_t>(VirtualAlloc(nullptr, length + 5, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE));
+    const auto detour = reinterpret_cast<std::uintptr_t>(VirtualAlloc(nullptr, this->function_size + 5, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE));
 
     // copy the contents
-    std::memmove(reinterpret_cast<void*>(detour), reinterpret_cast<void*>(to_hook), length);
+    std::memmove(reinterpret_cast<void*>(detour), reinterpret_cast<void*>(to_hook), this->function_size);
 
     // jmp
-    *reinterpret_cast<std::uint8_t*>(detour + length) = 0xE9;
+    *reinterpret_cast<std::uint8_t*>(detour + this->function_size) = 0xE9;
 
     // add to jmp
     const auto rel_addr = (to_hook - detour - 5);
-    *reinterpret_cast<std::uint32_t*>(detour + length + 1) = rel_addr;
+    *reinterpret_cast<std::uint32_t*>(detour + this->function_size + 1) = rel_addr;
 
-    this->detour(to_hook, to_replace);
+    this->detour(to_hook, to_replace, this->function_size);
     return detour;
 }
 
