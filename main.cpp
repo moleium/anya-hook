@@ -33,7 +33,7 @@ void main()
     MessageBoxA(0, "heheheha this was a test", "Test", 0);
 
     // hook da function heheheha
-    original_messageboxA = context.hook(messagebox_sub, reinterpret_cast<std::uintptr_t>(&messagebox_hook), 5);
+    original_messageboxA = context.hook(messagebox_sub, reinterpret_cast<std::uintptr_t>(&messagebox_hook));
 
     // lets run a normal messagebox to see if its logged
     MessageBoxA(0, "heheheha this was logged", "Test", 0);
