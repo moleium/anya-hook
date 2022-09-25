@@ -3,6 +3,7 @@ Minimal hooking library with few useful features.
 
 ## What is trampoline hook?
 Trampoline hook is a hooking technique that allows you to hook a function by overwriting the first few bytes of the function with a jump to your hook function. so it will call your hook function and then jump back to the original function.
+
 <img src="http://jbremer.org/wp-posts/ah-trampoline.png">
 
 ## Features
@@ -91,3 +92,7 @@ So, when we call MessageBoxA function, it will call our hook function (in this c
 **Like This:**
 <img src="https://media.discordapp.net/attachments/990376903129038869/1023236458619863111/unknown.png">
 It printed the message box content to the console when MessageBoxA was called.
+
+## Credits
+- [Rexi](https://github.com/RexiRexii) Hooking Library
+- [Anya](https://github.com/MoleTheDev) Basic Base & Documentation
