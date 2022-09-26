@@ -62,9 +62,9 @@ Unhook the function
 context.unhook(messagebox_sub);
 ```
 
-Suspend the hook
+Suspend/Yield the hook
 ```cpp
-context.suspend(messagebox_sub);
+context.yield(messagebox_sub);
 ```
 
 Resume the hook
