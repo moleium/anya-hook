@@ -89,7 +89,7 @@ int main()
 ```
 So, when we call MessageBoxA function, it will call our hook function (in this case it will print the inputed message) and then jump back to the original function and continue the execution.<br>
 
-**Like This:**
+**Like This:**<br>
 <img src="https://media.discordapp.net/attachments/990376903129038869/1023236458619863111/unknown.png">
 It printed the message box content to the console when MessageBoxA was called.
 
