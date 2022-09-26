@@ -22,6 +22,10 @@ Include required headers
 #include <iostream>
 #include "hooking_lib/anya_hook.hpp"
 ```
+Create hook context
+```
+anya_hook context{};
+```
 
 Define original function and hook function
 ```cpp
@@ -39,36 +43,49 @@ std::int32_t __stdcall hook_messageboxA(HWND hwnd, LPCTSTR lpText, LPCTSTR lpCap
 ```
 **NOTE:** Function parameters and return type must be the same as the original function.
 
+Grab the original function (in our case we will grab MessageBoxA as an example)
+```cpp
+// Grab user32.dll, which contains MessageBoxA
+const auto user32 = GetModuleHandleA("user32.dll");
+
+// Grab MessageBoxA
+const auto messagebox_sub = reinterpret_cast<std::uintptr_t>(GetProcAddress(user32, "MessageBoxA"));
+```
+
 Hook the function
 ```cpp
-original_messageboxA = anya_hook::hook_function(MessageBoxA, hook_messageboxA);
+context.unhook(messagebox_sub, hook_messageboxA);
 ```
 
 Unhook the function
 ```cpp
-anya_hook::unhook_function(MessageBoxA, original_messageboxA);
+context.unhook(messagebox_sub);
 ```
 
 Suspend the hook
 ```cpp
-anya_hook::suspend_hook(MessageBoxA);
+context.suspend(messagebox_sub);
 ```
 
 Resume the hook
 ```cpp
-anya_hook::resume_hook(MessageBoxA);
+context.resume(messagebox_sub);
 ```
 
 ## Full Example
 ```cpp
+// Include required headers
 #include <Windows.h>
 #include <stdio.h>
 #include <iostream>
 #include "hooking_lib/anya_hook.hpp"
 
+// Defining original messagebox and context for the hook
 std::uintptr_t original_messageboxA = 0;
+anya_hook context{};
 
-std::int32_t __stdcall hook_messageboxA(HWND hwnd, LPCTSTR lpText, LPCTSTR lpCaption, UINT uType)
+// Define Hook function
+std::int32_t __stdcall messagebox_hook(HWND hwnd, LPCTSTR lpText, LPCTSTR lpCaption, UINT uType)
 {
     printf("[+] HOOKED: %s\n", lpText);
 
@@ -78,13 +95,25 @@ std::int32_t __stdcall hook_messageboxA(HWND hwnd, LPCTSTR lpText, LPCTSTR lpCap
     return orig_messagebox;
 }
 
-int main()
+void main()
 {
-	original_messageboxA = anya_hook::hook_function(MessageBoxA, hook_messageboxA);
-	MessageBoxA(NULL, "This was logged by the hook", "Hooked", MB_OK);
-	anya_hook::unhook_function(MessageBoxA, original_messageboxA);
-	MessageBoxA(NULL, "This was not logged by the hook", "Unhooked", MB_OK);
-	return 0;
+    // Grab user32.dll, which contains MessageBoxA
+    const auto user32 = GetModuleHandleA("user32.dll");
+
+    // Grab MessageBoxA
+    const auto messagebox_sub = reinterpret_cast<std::uintptr_t>(GetProcAddress(user32, "MessageBoxA"));
+
+    // Let's run some tests
+    MessageBoxA(0, "heheheha this is a test", "Logged", 0);
+
+    // Hook da function hehea
+    original_messageboxA = context.hook(messagebox_sub, reinterpret_cast<std::uintptr_t>(&messagebox_hook));
+    // Let's run a normal messagebox to see if its logged
+    MessageBoxA(0, "heheheha this was logged", "Test", 0);
+
+    // Unhook da function
+    context.unhook(messagebox_sub);
+    MessageBoxA(0, "GRRRR x2 the hooks gone", "Test", 0);
 }
 ```
 So, when we call MessageBoxA function, it will call our hook function (in this case it will print the inputed message) and then jump back to the original function and continue the execution.<br>
