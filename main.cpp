@@ -1,49 +1,45 @@
-// MessageBoxA Trampoline Hook
-#include <Windows.h>
-#include <stdio.h>
 #include <iostream>
-#include "hooking_lib/anya_hook.hpp"
+#include <Windows.h>
+#include "anya_hook.hpp"
 
-std::uintptr_t original_messageboxA = 0;
-anya_hook context{};
+// Function prototypes
+typedef void(__stdcall* MessageBoxA_t)(HWND, LPCSTR, LPCSTR, UINT);
+MessageBoxA_t OriginalMessageBoxA;
 
-// this part was written by my girlfriend
-std::int32_t __stdcall messagebox_hook(HWND hwnd, LPCTSTR lpText, LPCTSTR lpCaption, UINT uType)
-{
-    printf("[+] HOOKED: %s\n", lpText);
-
-    const auto orig_messagebox = reinterpret_cast<std::int32_t(__stdcall*)(HWND, LPCTSTR, LPCTSTR, UINT)>(original_messageboxA)
-        (hwnd, lpText, lpCaption + 1, uType);
-
-    return orig_messagebox;
+void __stdcall HookedMessageBoxA(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType) {
+    std::cout << "[uwu] Logged MessageBoxA: " << lpText << std::endl;
+    OriginalMessageBoxA(hWnd, lpText, lpCaption, uType);
 }
 
-// this part was also written by my girlfriend but I modified some parts
-void main()
-{
-    SetConsoleTitleA("cabeza inteligente idiota");
+int main() {
+    Hook hook;
+    HMODULE user32Module = GetModuleHandle("user32.dll");
 
-    // grab user32 since it has the messagebox
-    const auto user32 = GetModuleHandleA("user32.dll");
+    if (!user32Module) {
+        std::cerr << "Failed to get user32.dll module handle" << std::endl;
+        return 1;
+    }
 
-    // grab messagebox from user32
-    const auto messagebox_sub = reinterpret_cast<std::uintptr_t>(GetProcAddress(user32, "MessageBoxA"));
+    uintptr_t MessageBoxAAddr = reinterpret_cast<uintptr_t>(GetProcAddress(user32Module, "MessageBoxA"));
 
-    // lets run a normal messagebox that *wont* get logged
-    MessageBoxA(0, "heheheha this was a test", "Test", 0);
+    if (!MessageBoxAAddr) {
+        std::cerr << "Failed to get MessageBoxA address" << std::endl;
+        return 1;
+    }
 
-    // hook da function heheheha
-    original_messageboxA = context.hook(messagebox_sub, reinterpret_cast<std::uintptr_t>(&messagebox_hook));
+    uintptr_t HookedMessageBoxAAddr = reinterpret_cast<uintptr_t>(&HookedMessageBoxA);
+    OriginalMessageBoxA = reinterpret_cast<MessageBoxA_t>(hook.hook(MessageBoxAAddr, HookedMessageBoxAAddr));
 
-    // lets run a normal messagebox to see if its logged
-    MessageBoxA(0, "heheheha this was logged", "Test", 0);
+    MessageBoxA(NULL, "Original MessageBoxA", "Test", MB_OK);
 
-    context.yield(messagebox_sub);
-    MessageBoxA(0, "heheheha this was not logged", "Test", 0);
+    hook.yield(MessageBoxAAddr);
+    MessageBoxA(NULL, "This wont be logged", "Test", MB_OK);
 
-    context.resume(messagebox_sub);
-    MessageBoxA(0, "GRRRR now this was logged", "Test", 0);
+    hook.resume(MessageBoxAAddr);
+    MessageBoxA(NULL, "This was logged", "Test", MB_OK);
 
-    context.unhook(messagebox_sub);
-    MessageBoxA(0, "GRRRR x2 the hooks gone", "Test", 0);
+    hook.unhook(MessageBoxAAddr);
+    MessageBoxA(NULL, "Original MessageBoxA after unhook", "Test", MB_OK);
+
+    return 0;
 }
