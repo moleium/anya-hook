@@ -1,27 +1,24 @@
 #pragma once
 #include <Windows.h>
-
-#include <iostream>
 #include <cstdint>
 #include <cstddef>
 
-class anya_hook
-{
+class Hook {
 public:
-	std::uintptr_t target_function; // detour
+    explicit Hook();
 
-	std::uint8_t* function_o; // old
-	std::uint8_t* function_t; // backup
+    uintptr_t hook(uintptr_t to_hook, uintptr_t to_replace, int32_t instr_nops = 0);
+    void unhook(uintptr_t to_unhook);
+    void yield(uintptr_t to_yield);
+    void resume(uintptr_t to_resume);
 
-	std::size_t function_size;
+private:
+    uintptr_t target_function; // detour
 
-public:
-	explicit anya_hook();
+    uint8_t* function_o; // old
+    uint8_t* function_t; // backup
 
-	void detour(const std::uintptr_t to_hook, const std::uintptr_t to_replace, const std::size_t length);
-	std::uintptr_t hook(const std::uintptr_t to_hook, const std::uintptr_t to_replace, std::int32_t instr_nops = 0);
+    size_t function_size;
 
-	void unhook(std::uintptr_t to_unhook);
-	void yield(const std::uintptr_t to_yield);
-	void resume(const std::uintptr_t to_resume);
+    void detour(uintptr_t to_hook, uintptr_t to_replace, size_t length);
 };
