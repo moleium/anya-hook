@@ -52,10 +52,10 @@ const auto original = context.hook(function, reinterpret_cast<std::uintptr_t>(&h
 context.unhook(function);
 
 // Yield hook
-context.yield(messagebox_sub);
+context.yield(function);
 
 // Resume hook
-context.resume(messagebox_sub);
+context.resume(function);
 ```
 
 ## Credits
