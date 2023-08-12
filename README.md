@@ -1,8 +1,8 @@
 # Trampoline Hook Library
-Lightweight and Fast Minimal Hooking Library with Useful Features
+Lightweight and fast minimal x86 hooking library with useful features.
 
 ## What is a trampoline hook?
-Trampoline hook is a hooking technique that allows you to hook a function by overwriting the first few bytes of the function with a jump to your hook function. so it will call your hook function and then jump back to the original function.
+Trampoline hook is a technique to hook a function by replacing the first few bytes with a jump to your hook function, which gets called before jumping back to the original function.
 
 <img src="http://jbremer.org/wp-posts/ah-trampoline.png">
 
@@ -59,4 +59,4 @@ context.resume(function);
 ```
 
 # License
-MIT. See [LICENSE]
+MIT. See [LICENSE](LICENSE)
