@@ -2,28 +2,25 @@
 #define ANYA_HOOK_HPP
 
 #include <Windows.h>
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
+
+#include "hde/hde32_disasm.hpp"
 
 class Hook {
 public:
-    explicit Hook();
-
-    uintptr_t hook(uintptr_t to_hook, uintptr_t to_replace, int32_t instr_nops = 0);
+    Hook();
+    void set_memory_protect(uintptr_t address, size_t size, DWORD protect);
+    void detour(const uintptr_t to_hook, const uintptr_t to_replace, const size_t length);
+    uintptr_t hook(const uintptr_t to_hook, const uintptr_t to_replace, int32_t num_nops);
     void unhook(uintptr_t to_unhook);
-    void pause(uintptr_t to_yield);
+    void pause(uintptr_t to_pause);
     void resume(uintptr_t to_resume);
 
 private:
-    uintptr_t target_function; // detour
-
-    uint8_t* function_o; // old
-    uint8_t* function_t; // backup
-
+    uint8_t* function_original;
+    uint8_t* function_temp;
     size_t function_size;
-
-    void detour(uintptr_t to_hook, uintptr_t to_replace, size_t length);
-    void set_memory_protect(uintptr_t address, size_t size, DWORD protect);
 };
 
 #endif // ANYA_HOOK_HPP

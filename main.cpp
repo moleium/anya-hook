@@ -6,7 +6,7 @@ typedef void(__stdcall* MsgBoxA_t)(HWND, LPCSTR, LPCSTR, UINT);
 MsgBoxA_t OrigMsgBoxA;
 
 void __stdcall HookedMsgBoxA(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType) {
-    std::cout << "[uwu] Logged: " << lpText << "\n";
+    printf("> (%s) %s\n", lpCaption, lpText);
     OrigMsgBoxA(hWnd, lpText, lpCaption, uType);
 }
 
@@ -19,18 +19,12 @@ int main() {
     if (!addr) return 1;
 
     uintptr_t HookedMsgBoxAAddr = reinterpret_cast<uintptr_t>(&HookedMsgBoxA);
-    OrigMsgBoxA = reinterpret_cast<MsgBoxA_t>(hook.hook(addr, HookedMsgBoxAAddr));
+    OrigMsgBoxA = reinterpret_cast<MsgBoxA_t>(hook.hook(addr, HookedMsgBoxAAddr, 0));
 
-    MessageBoxA(NULL, "Original MsgBoxA", "Test", MB_OK);
-
-    hook.pause(addr);
-    MessageBoxA(NULL, "[Paused] won't be logged", "Test", MB_OK);
-
-    hook.resume(addr);
-    MessageBoxA(NULL, "[Resumed] will be logged", "Test", MB_OK);
+    MessageBoxA(NULL, "This will be intercepted", "Message", MB_OK);
 
     hook.unhook(addr);
-    MessageBoxA(NULL, "Original MsgBoxA after unhook", "Test", MB_OK);
+    MessageBoxA(NULL, "This will not be intercepted", "Message", MB_OK);
 
     return 0;
 }
